@@ -1,0 +1,19 @@
+{
+  "name": "escape-server-web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "set PORT=3001 && node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.3",
+    "express-form-data": "^2.0.6"
+  },
+  "devDependencies": {
+    "body-parser": "^1.18.3"
+  }
+}
