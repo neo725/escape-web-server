@@ -4,7 +4,7 @@ const path = require('path')
 const fs = require('fs')
 const toArray = require('stream-to-array')
 
-const mlab = require('mongolab-data-api')('40LUPN8uUT4iK3NUsTsoV--8dyUq28W-')
+const mlab = require('mongolab-data-api')('xsrRNanModhHHcrU64UD9ZnxaofG0sMl')
 
 const options = {
     uploadDir: os.tmpdir(),
