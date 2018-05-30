@@ -7,7 +7,7 @@ const options = {
     uploadDir: os.tmpdir(),
     autoClean: true,
 }
-const saveDir = "G:\\#Temp"
+//const saveDir = "G:\\#Temp"
 
 var controller = {
     hello: (req, res) => {
@@ -19,13 +19,17 @@ var controller = {
 
         console.log('upload called...')
 
-        //console.log(req.files.file)
+        console.log(req.files)
+
+        if (req.files.file == undefined) {
+            return res.sendStatus(200)
+        }
 
         let filename = path.basename(req.files.file.path)
 
-        // let wstream = fs.createWriteStream(`${saveDir}\\${filename}`)
+        let wstream = fs.createWriteStream(`${options.uploadDir}\\abc\\${filename}`)
 
-        // req.files.file.pipe(wstream)
+        req.files.file.pipe(wstream)
 
         //console.log(req.body)
 
