@@ -25,11 +25,11 @@ var controller = {
             return res.sendStatus(200)
         }
 
-        let filename = path.basename(req.files.file.path)
+        // let filename = path.basename(req.files.file.path)
 
-        let wstream = fs.createWriteStream(`${options.uploadDir}\\escape-${filename}`)
+        // let wstream = fs.createWriteStream(`${options.uploadDir}\\escape-${filename}`)
 
-        req.files.file.pipe(wstream)
+        // req.files.file.pipe(wstream)
 
         //console.log(req.body)
 
@@ -53,7 +53,7 @@ var init = () => {
     app.use(bodyParser.json())
     app.use(formData.parse(options))
     app.use(formData.format())
-    app.use(formData.stream())
+    //app.use(formData.stream())
     app.use(formData.union())
 
     initRoute(app)
