@@ -4,7 +4,7 @@ const path = require('path')
 const fs = require('fs')
 const toArray = require('stream-to-array')
 
-const mlab = require('mongolab-data-api')('xsrRNanModhHHcrU64UD9ZnxaofG0sM')
+// const mlab = require('mongolab-data-api')('xsrRNanModhHHcrU64UD9ZnxaofG0sM')
 
 const options = {
     uploadDir: os.tmpdir(),
@@ -23,20 +23,20 @@ var addUpload = (rstream, filename) => {
         console.log(err)
 
         if (arr) {
-            let db_options = {
-                database: mlab_db_options.database,
-                collectionName: mlab_db_options,
-                documents: {
-                    filename: filename,
-                    data: arr,
-                }
-            }
-            console.log('prepare to insert documents...')
+            // let db_options = {
+            //     database: mlab_db_options.database,
+            //     collectionName: mlab_db_options,
+            //     documents: {
+            //         filename: filename,
+            //         data: arr,
+            //     }
+            // }
+            // console.log('prepare to insert documents...')
 
-            mlab.insertDocuments(db_options, (err) => {
-                console.log('err :')
-                console.log(err)
-            })
+            // mlab.insertDocuments(db_options, (err) => {
+            //     console.log('err :')
+            //     console.log(err)
+            // })
         }
     })
 }
