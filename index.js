@@ -2,44 +2,12 @@ const formData = require('express-form-data')
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
-const toArray = require('stream-to-array')
-
-// const mlab = require('mongolab-data-api')('xsrRNanModhHHcrU64UD9ZnxaofG0sM')
 
 const options = {
     uploadDir: os.tmpdir(),
     autoClean: true,
 }
-const mlab_db_options = {
-    database: 'heroku_5bw34zzz',
-    collectionName: 'upload',
-}
-
-var addUpload = (rstream, filename) => {
-    console.log('ready to upload data to mlab.mongodb...')
-    toArray(rstream, (err, arr) => {
-        console.log('toArray done.')
-        console.log('err :')
-        console.log(err)
-
-        if (arr) {
-            // let db_options = {
-            //     database: mlab_db_options.database,
-            //     collectionName: mlab_db_options,
-            //     documents: {
-            //         filename: filename,
-            //         data: arr,
-            //     }
-            // }
-            // console.log('prepare to insert documents...')
-
-            // mlab.insertDocuments(db_options, (err) => {
-            //     console.log('err :')
-            //     console.log(err)
-            // })
-        }
-    })
-}
+const saveDir = "G:\\#Temp"
 
 var controller = {
     hello: (req, res) => {
@@ -55,11 +23,11 @@ var controller = {
 
         let filename = path.basename(req.files.file.path)
 
-        //let wstream = fs.createWriteStream(`${saveDir}\\${filename}`)
+        // let wstream = fs.createWriteStream(`${saveDir}\\${filename}`)
 
-        //req.files.file.pipe(wstream)
+        // req.files.file.pipe(wstream)
 
-        addUpload(req.files.file, filename)
+        //console.log(req.body)
 
         return res.sendStatus(200)
     }
