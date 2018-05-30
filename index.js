@@ -45,7 +45,7 @@ var initRoute = (app) => {
         .get(controller.hello)
     app.route('/upload')
         .post(controller.upload)
-    app.route('/data')
+    app.route('/data/:file')
         .get(controller.data)
 }
 var init = () => {
