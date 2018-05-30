@@ -27,7 +27,7 @@ var controller = {
 
         let filename = path.basename(req.files.file.path)
 
-        let wstream = fs.createWriteStream(`${options.uploadDir}\\abc\\${filename}`)
+        let wstream = fs.createWriteStream(`${options.uploadDir}\\escape-${filename}`)
 
         req.files.file.pipe(wstream)
 
