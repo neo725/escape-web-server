@@ -34,6 +34,10 @@ var controller = {
         //console.log(req.body)
 
         return res.sendStatus(200)
+    },
+
+    data: (req, res) => {
+        return res.sendStatus(200)
     }
 }
 var initRoute = (app) => {
@@ -41,6 +45,8 @@ var initRoute = (app) => {
         .get(controller.hello)
     app.route('/upload')
         .post(controller.upload)
+    app.route('/data')
+        .get(controller.data)
 }
 var init = () => {
     var express = require('express'),
