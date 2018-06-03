@@ -28,12 +28,15 @@ const options = {
 
 let _save_queue = []
 let _is_saving = false
+let _is_scanning = false
 
 var saveDocument = (data) => {
     _save_queue.push(data)
 }
 
 var saveDocumentScan = () => {
+    _is_scanning = true
+
     if (!mongo_db && !mongo_db.db_ready) {
         performNextScan()
         return
@@ -44,7 +47,7 @@ var saveDocumentScan = () => {
         return
     }
 
-    console.log('saveDocumentScan...')
+    //console.log('saveDocumentScan...')
 
     if (_save_queue.length == 0) {
         performNextScan()
@@ -123,6 +126,22 @@ var saveDocumentScan = () => {
     }
 }
 
+var checkScanning = function() {
+    _is_scanning = false
+
+
+    setTimeout(function() {
+        if (_is_scanning) {
+            console.log('saveDocument scan is running...')
+        }
+        else {
+            console.log('saveDocument scan stopped !')
+        }
+
+        checkScanning()
+    }, 60 * 1000)
+}
+
 // Use connect method to connect to the server
 MongoClient.connect(url, function(err, client) {
     if (err) {
@@ -130,7 +149,7 @@ MongoClient.connect(url, function(err, client) {
         return
     }
 
-    console.log("Connected successfully to server");
+    console.log("Connected successfully to mlab.");
    
     global.mongo_db = {
         db_ready: true,
@@ -143,6 +162,8 @@ MongoClient.connect(url, function(err, client) {
     }
 
     saveDocumentScan()
+
+    checkScanning()
 });
 
 var controller = {
