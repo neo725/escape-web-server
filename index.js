@@ -4,7 +4,8 @@ const path = require('path')
 const fs = require('fs')
 const toArray = require('stream-to-array')
 const MongoClient = require('mongodb').MongoClient;
-const multer  = require('multer')
+const multer = require('multer')
+const _ = require('lodash')
 
 // var storage = multer.memoryStorage()
 // var m_upload = multer({ storage: storage })
@@ -24,11 +25,50 @@ const options = {
     uploadDir: os.tmpdir(),
     autoClean: true,
 }
-//const saveDir = "G:\\#Temp"
 
+//const _def_date = Date.parse('01 Jan 1970 00:00:00 GMT')
+const _def_date = new Date(1970, 1, 1, 0, 0, 0, 0)
 let _save_queue = []
 let _is_saving = false
 let _is_scanning = false
+
+var getUpload = (filename, callback) => {
+    if (!mongo_db && !mongo_db.db_ready) {
+        return callback(null, 'not ready')
+    }
+
+    var uploads = mongo_db.db.collection('uploads')
+    uploads.find({ 'original_name': filename }).toArray(function(err, docs) {
+        if (err) {
+            callback(null, err)
+        }
+
+        callback(docs[0])
+    })
+}
+
+var getUploadList = (callback) => {
+    if (!mongo_db && !mongo_db.db_ready) {
+        return callback([], 'not ready')
+    }
+
+    var uploads = mongo_db.db.collection('uploads')
+    uploads.find({}).toArray(function(err, docs) {
+        if (err) {
+            callback([], err)
+        }
+
+        _.each(docs, (doc, index) => {
+            
+            if (!doc.createdate) {
+                doc.createdate = _def_date
+            }
+        })
+
+
+        callback(docs)
+    })
+}
 
 var saveDocument = (data) => {
     _save_queue.push(data)
@@ -168,8 +208,19 @@ MongoClient.connect(url, function(err, client) {
 
 var controller = {
     hello: (req, res) => {
-        var data = { message: 'hello world' }
-        return res.json(data)
+        // var data = { message: 'hello world' }
+        // return res.json(data)
+
+        getUploadList(function(uploads, error) {
+            if (error) {
+                return res.json(error)
+            }
+
+            res.render('index', {
+                title: 'This is EJS template test',
+                uploads: _.orderBy(uploads, [ 'createdate', 'original_name' ], [ 'desc', 'asc' ])
+            })
+        })
     },
 
     upload: (req, res, next) => {
@@ -196,13 +247,37 @@ var controller = {
             mimetpe: file.mimetype,
             buffer: Binary(file.buffer),
             size: file.size,
+            createdate: new Date(),
         })
 
         res.sendStatus(200)
     },
 
     data: (req, res) => {
-        res.sendStatus(200)
+        var filename = req.params.file;
+
+        getUpload(filename, function(upload, error) {
+            if (error) {
+                res.sendStatus(400)
+                res.json(error)
+                return
+            }
+
+            // for debug use
+            //console.log(upload)
+
+            if (req.query.download == "1") {
+                var contentDisposition = `attachment; filename="${upload.original_name}"`
+                res.set('Content-Disposition', contentDisposition)
+            }
+            res.set('Content-Type', upload.mimetpe)
+            res.set('Content-Length', upload.size)
+            res.set('data-id', upload._id)
+
+            //res.end(upload.buffer, 'binary')
+            //res.send(200, new Buffer(upload.buffer))
+            res.status(200).send(new Buffer(upload.buffer.buffer))
+        })
     }
 }
 var initRoute = (app) => {
@@ -222,6 +297,10 @@ var init = () => {
     server = require('http').createServer(app),
     port = process.env.PORT || 3000,
     bodyParser = require('body-parser')
+
+    console.log(`static : ${path.join(__dirname, 'assets')}`)
+    app.set('view engine', 'ejs');
+    app.use(express.static(path.join(__dirname, 'assets')))
 
     app.use(bodyParser.urlencoded({ extended: true }))
     app.use(bodyParser.json())

@@ -1,0 +1,27 @@
+.download-list li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+.download {
+    margin-left: 5px;
+    visibility: hidden;
+    display: none;
+}
+.download img {
+    width: 100%;
+    max-width: 24px;
+    top: 8px;
+    position: relative;
+}
+
+.download-text a {
+    background-color: blueviolet;
+    border-radius: 5px;
+    padding: 2px 5px;
+}
+
+.download-text a, .download-text a:visited {
+    color: #ffffff;
+    font-size: 10px;
+    text-decoration-line: none;
+}
