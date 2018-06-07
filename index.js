@@ -314,7 +314,7 @@ var init = () => {
     server.listen(port)
 
     console.log(`escape-server-web listen on : ${port}`)
-
+    console.log(`tmp dir : ${os.tmpdir()}`)
 }
 
 init()
