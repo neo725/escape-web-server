@@ -136,7 +136,7 @@ var saveDocumentScan = () => {
                 doc.items.push({ _last_access: 0, name: data.original_name, create_date: data.createdate })
                 _.each(doc.items, (item) => {
                     if (item.create_date) {
-                        continue
+                        return
                     }
 
                     item.create_date = _def_date
