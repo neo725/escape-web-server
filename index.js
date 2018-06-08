@@ -27,7 +27,7 @@ const options = {
 }
 
 //const _def_date = Date.parse('01 Jan 1970 00:00:00 GMT')
-const _def_date = new Date(1970, 1, 1, 0, 0, 0, 0)
+const _def_date = new Date(2018, 6, 7, 0, 0, 0, 0)
 let _save_queue = []
 let _is_saving = false
 let _is_scanning = false
@@ -62,11 +62,22 @@ var getUploadList = (callback) => {
             
             if (!doc.createdate) {
                 doc.createdate = _def_date
+
+                updateDocument(doc)
             }
         })
 
 
         callback(docs)
+    })
+}
+
+var updateDocument = (doc) => {
+    doc.updateOne({ 'original_name': doc.original_name }, { $set: doc }, function(err, result) {
+        if (err) {
+            console.log(`saveDoc [${doc.original_name}] to mongodb error !`)
+            console.log(err)
+        }
     })
 }
 
@@ -105,7 +116,7 @@ var saveDocumentScan = () => {
                 var doc = {
                     name: 'uploads',
                     count: 1,
-                    items: [ { _last_access: 0, name: data.original_name } ]
+                    items: [ { _last_access: 0, name: data.original_name, create_date: data.createdate } ]
                 }
 
                 info.insert(doc, function(err, result) {
@@ -122,7 +133,14 @@ var saveDocumentScan = () => {
             else {
                 doc = docs[0]
                 doc.count += 1
-                doc.items.push({ _last_access: 0, name: data.original_name })
+                doc.items.push({ _last_access: 0, name: data.original_name, create_date: data.createdate })
+                _.each(doc.items, (item) => {
+                    if (item.create_date) {
+                        continue
+                    }
+
+                    item.create_date = _def_date
+                })
 
                 info.updateOne({ 'name': 'uploads' }, { $set: doc }, function(err, result) {
                     if (err) {
