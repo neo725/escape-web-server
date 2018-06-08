@@ -63,7 +63,7 @@ var getUploadList = (callback) => {
             if (!doc.createdate) {
                 doc.createdate = _def_date
 
-                updateDocument(doc)
+                updateDocument(uploads, doc)
             }
         })
 
@@ -72,8 +72,8 @@ var getUploadList = (callback) => {
     })
 }
 
-var updateDocument = (doc) => {
-    doc.updateOne({ 'original_name': doc.original_name }, { $set: doc }, function(err, result) {
+var updateDocument = (collection, doc) => {
+    collection.updateOne({ 'original_name': doc.original_name }, { $set: doc }, function(err, result) {
         if (err) {
             console.log(`saveDoc [${doc.original_name}] to mongodb error !`)
             console.log(err)
