@@ -70,6 +70,7 @@ var getUploadList = (callback, retry_times = 0) => {
         _.each(docs, (doc, index) => {
             
             if (true || !doc.createdate) {
+
                 doc.createdate = _def_date
 
                 updateDocument(uploads, doc)
@@ -353,6 +354,7 @@ var init = () => {
     console.log(`tmp dir : ${os.tmpdir()}`)
     console.log('timezone :')
     console.log(new Date().getTimezoneOffset())
+    console.log(`_def_date : ${_def_date}`)
 }
 
 init()

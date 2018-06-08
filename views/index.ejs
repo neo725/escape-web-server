@@ -17,7 +17,9 @@
                 <a href="/data/<%= uploads[i].original_name %>"><%= uploads[i].original_name %></a>
                 <span class="download">
                     <a href="/data/<%= uploads[i].original_name %>?download=1" title="下載檔案">
-                        <img src="/images/download.png" /></a> @ <%= uploads[i].createdate %></span>
+                        <img src="/images/download.png" /></a>
+                    <span>@ <%= uploads[i].createdate %></span>
+                </span>
             </li>
         <% } %>
     </ul>
