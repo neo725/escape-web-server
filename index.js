@@ -333,6 +333,8 @@ var init = () => {
 
     console.log(`escape-server-web listen on : ${port}`)
     console.log(`tmp dir : ${os.tmpdir()}`)
+    console.log('timezone :')
+    console.log(new Date().getTimezoneOffset())
 }
 
 init()
