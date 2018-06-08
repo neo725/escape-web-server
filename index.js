@@ -53,7 +53,12 @@ var getUploadList = (callback, retry_times = 0) => {
         if (retry_times > 3) {
             return console.error('already retry over 3 times to connect to mlab, but still fail !!')
         }
-        return connectToMongoDb(db_url, () => { getUploadList(callback, ++retry_times) })
+
+        var retry_fn = () => {
+            getUploadList(callback, ++retry_times)
+        }
+        
+        return connectToMongoDb(db_url, retry_fn)
     }
 
     var uploads = mongo_db.db.collection('uploads')
@@ -204,6 +209,12 @@ var checkScanning = function() {
     }, 60 * 1000)
 }
 
+var init_db_scan = () => {
+    saveDocumentScan()
+
+    checkScanning()
+}
+
 var connectToMongoDb = (url, callback) => {
     // Use connect method to connect to the server
     MongoClient.connect(url, function(err, client) {
@@ -321,11 +332,7 @@ var init = () => {
     port = process.env.PORT || 3000,
     bodyParser = require('body-parser')
 
-    connectToMongoDb(db_url, () => {
-        saveDocumentScan()
-
-        checkScanning()
-    })
+    connectToMongoDb(db_url, init_db_scan)
     console.log(`static : ${path.join(__dirname, 'assets')}`)
     app.set('view engine', 'ejs');
     app.use(express.static(path.join(__dirname, 'assets')))
