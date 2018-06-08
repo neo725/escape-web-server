@@ -27,7 +27,7 @@ const options = {
 }
 
 //const _def_date = Date.parse('01 Jan 1970 00:00:00 GMT')
-const _def_date = new Date(2018, 6, 7, 0, 0, 0, 0)
+const _def_date = new Date(Date.UTC(2018, 6, 7, 0, 0, 0))
 let _save_queue = []
 let _is_saving = false
 let _is_scanning = false
@@ -60,7 +60,7 @@ var getUploadList = (callback) => {
 
         _.each(docs, (doc, index) => {
             
-            if (!doc.createdate) {
+            if (true || !doc.createdate) {
                 doc.createdate = _def_date
 
                 updateDocument(uploads, doc)
