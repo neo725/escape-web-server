@@ -27,7 +27,7 @@ const options = {
 }
 
 //const _def_date = Date.parse('01 Jan 1970 00:00:00 GMT')
-const _def_date = new Date(Date.UTC(2018, 6, 7, 0, 0, 0))
+const _def_date = new Date(Date.UTC(2018, 06, 07))
 let _save_queue = []
 let _is_saving = false
 let _is_scanning = false
