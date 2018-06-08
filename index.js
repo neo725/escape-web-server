@@ -57,7 +57,7 @@ var getUploadList = (callback, retry_times = 0) => {
         var retry_fn = () => {
             getUploadList(callback, ++retry_times)
         }
-        
+
         return connectToMongoDb(db_url, retry_fn)
     }
 
@@ -230,12 +230,13 @@ var connectToMongoDb = (url, callback) => {
             db: client.db(dbName)
         }
     
-        if (callback) {
-            callback()
-        }
         //client.close();
         global.performNextScan = function() {
             setTimeout(saveDocumentScan, 500)
+        }
+
+        if (callback) {
+            callback()
         }
     });
 }
