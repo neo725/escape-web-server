@@ -212,7 +212,7 @@ var checkScanning = function() {
     }, 60 * 1000)
 }
 
-var fixInfo = function() {
+var fixInfo = function(callback) {
     var info = mongo_db.db.collection('info')
 
     info.find({ 'name': 'uploads' }).toArray((err, docs) => {
@@ -233,6 +233,9 @@ var fixInfo = function() {
             }
 
             console.log('Info fix done !')
+            if (callback) {
+                callback()
+            }
         })
     })
 }
@@ -344,7 +347,9 @@ var controller = {
     },
 
     fixInfo: (req, res) => {
-        fixInfo()
+        fixInfo(() => {
+            res.status(200)
+        })
     }
 }
 var initRoute = (app) => {
