@@ -12,13 +12,13 @@
         <% for (var i = 0; i < uploads.length; i++) { %>
             <li>
                 <span class="download-text">
-                        <a href="/data/<%= uploads[i].original_name %>?download=1">下載檔案</a>
-                    </span>
+                    <a href="/data/<%= uploads[i].original_name %>?download=1">下載檔案</a>
+                    <span>@ <%= uploads[i].createdate %></span>
+                </span>
                 <a href="/data/<%= uploads[i].original_name %>"><%= uploads[i].original_name %></a>
                 <span class="download">
                     <a href="/data/<%= uploads[i].original_name %>?download=1" title="下載檔案">
                         <img src="/images/download.png" /></a>
-                    <span>@ <%= uploads[i].createdate %></span>
                 </span>
             </li>
         <% } %>

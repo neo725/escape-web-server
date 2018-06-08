@@ -125,7 +125,7 @@ var saveDocumentScan = () => {
 
             var doc = {}
             if (docs.length == 0) {
-                var doc = {
+                doc = {
                     name: 'uploads',
                     count: 1,
                     items: [ { _last_access: 0, name: data.original_name, create_date: data.createdate } ]
@@ -210,6 +210,31 @@ var checkScanning = function() {
 
         checkScanning()
     }, 60 * 1000)
+}
+
+var fixInfo = function() {
+    var info = mongo_db.db.collection('info')
+
+    info.find({ 'name': 'uploads' }).toArray((err, docs) => {
+        var doc = docs[0]
+
+        _.each(doc.items, (item) => {
+            if (item.create_date) {
+                return
+            }
+
+            item.create_date = _def_date
+        })
+
+        info.updateOne({ 'name': 'uploads' }, { $set: doc }, function(err, result) {
+            if (err) {
+                console.log('Info fix in mongodb error !')
+                console.log(err)
+            }
+
+            console.log('Info fix done !')
+        })
+    })
 }
 
 var init_db_scan = () => {
@@ -316,6 +341,10 @@ var controller = {
             //res.send(200, new Buffer(upload.buffer))
             res.status(200).send(new Buffer(upload.buffer.buffer))
         })
+    },
+
+    fixInfo: (req, res) => {
+        fixInfo()
     }
 }
 var initRoute = (app) => {
@@ -328,6 +357,7 @@ var initRoute = (app) => {
     app.get('/', controller.hello)
     app.post('/upload', uploadService.array('file'), controller.upload)
     app.get('/data/:file', controller.data)
+    app.get('/fix-info', controller.fixInfo)
 }
 var init = () => {
     var express = require('express'),
