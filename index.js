@@ -16,7 +16,7 @@ const db_user = 'eweb_user'
 const db_password = 'QWERT27005858'
 
 // Connection URL
-const url = `mongodb://${db_user}:${db_password}@ds139920.mlab.com:39920/heroku_5bw34zzz`
+const db_url = `mongodb://${db_user}:${db_password}@ds139920.mlab.com:39920/heroku_5bw34zzz`
  
 // Database Name
 const dbName = 'heroku_5bw34zzz';
@@ -53,7 +53,7 @@ var getUploadList = (callback, retry_times = 0) => {
         if (retry_times > 3) {
             return console.error('already retry over 3 times to connect to mlab, but still fail !!')
         }
-        return connectToMongoDb(() => { getUploadList(callback, ++retry_times) })
+        return connectToMongoDb(db_url, () => { getUploadList(callback, ++retry_times) })
     }
 
     var uploads = mongo_db.db.collection('uploads')
@@ -321,7 +321,7 @@ var init = () => {
     port = process.env.PORT || 3000,
     bodyParser = require('body-parser')
 
-    connectToMongoDb(() => {
+    connectToMongoDb(db_url, () => {
         saveDocumentScan()
 
         checkScanning()
