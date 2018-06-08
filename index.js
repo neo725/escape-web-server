@@ -47,9 +47,13 @@ var getUpload = (filename, callback) => {
     })
 }
 
-var getUploadList = (callback) => {
+var getUploadList = (callback, retry_times = 0) => {
     if (!mongo_db && !mongo_db.db_ready) {
-        return callback([], 'not ready')
+        //return callback([], 'not ready')
+        if (retry_times > 3) {
+            return console.error('already retry over 3 times to connect to mlab, but still fail !!')
+        }
+        return connectToMongoDb(() => { getUploadList(callback, ++retry_times) })
     }
 
     var uploads = mongo_db.db.collection('uploads')
@@ -200,29 +204,30 @@ var checkScanning = function() {
     }, 60 * 1000)
 }
 
-// Use connect method to connect to the server
-MongoClient.connect(url, function(err, client) {
-    if (err) {
-        console.log(err)
-        return
-    }
+var connectToMongoDb = (url, callback) => {
+    // Use connect method to connect to the server
+    MongoClient.connect(url, function(err, client) {
+        if (err) {
+            console.log(err)
+            return
+        }
 
-    console.log("Connected successfully to mlab.");
-   
-    global.mongo_db = {
-        db_ready: true,
-        db: client.db(dbName)
-    }
-   
-    //client.close();
-    global.performNextScan = function() {
-        setTimeout(saveDocumentScan, 500)
-    }
-
-    saveDocumentScan()
-
-    checkScanning()
-});
+        console.log("Connected successfully to mlab.");
+    
+        global.mongo_db = {
+            db_ready: true,
+            db: client.db(dbName)
+        }
+    
+        if (callback) {
+            callback()
+        }
+        //client.close();
+        global.performNextScan = function() {
+            setTimeout(saveDocumentScan, 500)
+        }
+    });
+}
 
 var controller = {
     hello: (req, res) => {
@@ -316,6 +321,11 @@ var init = () => {
     port = process.env.PORT || 3000,
     bodyParser = require('body-parser')
 
+    connectToMongoDb(() => {
+        saveDocumentScan()
+
+        checkScanning()
+    })
     console.log(`static : ${path.join(__dirname, 'assets')}`)
     app.set('view engine', 'ejs');
     app.use(express.static(path.join(__dirname, 'assets')))
