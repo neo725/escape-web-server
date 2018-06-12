@@ -5,7 +5,11 @@ const fs = require('fs')
 const toArray = require('stream-to-array')
 const MongoClient = require('mongodb').MongoClient;
 const multer = require('multer')
+const moment = require('moment')
 const _ = require('lodash')
+const colors = require('colors')
+const rimraf = require('rimraf')
+const archiver = require('archiver')
 
 // var storage = multer.memoryStorage()
 // var m_upload = multer({ storage: storage })
@@ -33,6 +37,8 @@ let _is_saving = false
 let _is_scanning = false
 
 _def_date.setMonth(_def_date.getMonth() - 1)
+
+
 
 var getUpload = (filename, callback) => {
     if (!mongo_db && !mongo_db.db_ready) {
@@ -71,7 +77,7 @@ var getUploadList = (callback, retry_times = 0) => {
 
         _.each(docs, (doc, index) => {
             
-            if (true || !doc.createdate) {
+            if (!doc.createdate) {
 
                 doc.createdate = _def_date
 
@@ -128,7 +134,9 @@ var saveDocumentScan = () => {
                 doc = {
                     name: 'uploads',
                     count: 1,
-                    items: [ { _last_access: 0, name: data.original_name, create_date: data.createdate } ]
+                    items: [ { _last_access: 0, 
+                        name: data.original_name, 
+                        create_date: data.createdate } ]
                 }
 
                 info.insert(doc, function(err, result) {
@@ -212,7 +220,7 @@ var checkScanning = function() {
     }, 60 * 1000)
 }
 
-var fixInfo = function(callback) {
+var fixInfo = function (callback) {
     var info = mongo_db.db.collection('info')
 
     info.find({ 'name': 'uploads' }).toArray((err, docs) => {
@@ -237,6 +245,31 @@ var fixInfo = function(callback) {
                 callback()
             }
         })
+    })
+}
+
+var fixUploads = function (callback) {
+    var uploadsCollection = mongo_db.db.collection('uploads')
+    uploadsCollection.find({}).toArray((err, uploads) => {
+        _.each(uploads, (upload) => {
+            if (upload.createdate) {
+                var createdate = moment(upload.createdate)
+
+                upload.section = createdate.format('YYYY-M-D')
+
+                uploadsCollection.updateOne({ 'original_name': upload.original_name }, 
+                    { $set: upload }, function (err, result) {
+                        if (err) {
+                            console.log('Uploads fix in mongodb error !')
+                            console.log(err)
+                        }
+                    })
+            }
+        })
+
+        if (callback) {
+            callback()
+        }
     })
 }
 
@@ -289,6 +322,248 @@ var controller = {
         })
     },
 
+    compressDownloadList: (req, res) => {
+        var findIndex = (list, find) => {
+            var currentIndex = -1
+            var findIndex = -1
+
+            list.forEach(function(item) {
+                currentIndex += 1
+                
+                if (typeof(item) == 'string') {
+
+                    if (item == find) {
+                        findIndex = currentIndex
+                    }
+                }
+
+                else if (typeof(item) == 'object') {
+                    if (item.hasOwnProperty('name') && 
+                        item.name == find) {
+                            findIndex = currentIndex
+                        }
+                    else if (typeof(find) == 'function') {
+                        if (find(item) == true) {
+                            findIndex = currentIndex
+                        }
+                    }
+                }
+            })
+
+            return findIndex
+        }
+
+        var getUploadCompressList = (uploads, error) => {
+            if (error) {
+                return res.json(error)
+            }
+
+            var ordered_uploads = _.orderBy(uploads, [ 'section', 'createdate', 'original_name' ], [ 'desc', 'desc', 'asc' ])
+
+            var sections = []
+            //const regex = /(\w+)_.+/gi;
+            const regex = /([0-9A-Z]+)/gi
+
+            ordered_uploads.forEach((upload) => {
+                var create_date = moment(upload.createdate)
+                var name = upload.original_name
+                var section_name = create_date.format('YYYY-M-D')
+                var section_path = path.join(options.uploadDir, section_name)
+
+                console.log(`section_path = ${section_path}`.yellow)
+
+                var index = findIndex(sections, section_name)
+                if (index == -1) {
+                    sections.push({
+                        name: section_name,
+                        count: 1
+                    })
+
+                    index = sections.length - 1
+
+                    if (fs.existsSync(section_path)) {
+                        rimraf.sync(section_path)
+                    }
+                    fs.mkdirSync(section_path)
+                }
+                else {
+                    sections[index].count += 1
+                }
+                
+                var section = sections[index]
+                
+                var match = name.match(regex)
+                var part = '', indexOfParts = -1, part_path = ''
+                if (match && match != null) {
+                    part = match[0]
+
+                    if (!section.parts || section.parts === undefined) {
+                        section.parts = [part]
+                        section.parts_summary = [{ part_name: part, count: 0}]
+                    }
+                    else {
+                        indexOfParts = findIndex(section.parts, part)
+                        if (indexOfParts == -1 && part && part.length > 0) {
+                            section.parts.push(part)
+                            section.parts_summary.push({ part_name: part, count: 0})
+                        }
+                    }
+
+                    part_path = path.join(section_path, part)
+
+                    var findFunc = (item) => {
+                        return item.part_name == part
+                    }
+
+                    var summaryIndex = findIndex(section.parts_summary, findFunc)
+                    if (summaryIndex != -1) {
+                        var summary = section.parts_summary[summaryIndex]
+
+                        if (summary) {
+                            summary.count += 1
+                        }
+                    }
+
+                    if (fs.existsSync(part_path) == false) {
+                        fs.mkdirSync(part_path)
+                    }
+
+                    console.log(`part_path = ${part_path}`)
+
+                    //var buffer = new Buffer(upload.buffer, 'binary')
+
+                    fs.writeFileSync(path.join(part_path, name), upload.buffer, "binary")
+                }
+                
+            })
+            
+            sections.forEach(function(section) {
+                var section_path = path.join(options.uploadDir, section.name)
+
+                section.parts.forEach(function(part) {
+                    var findExpr = function (item) {
+                        return item.part_name == part
+                    }
+
+                    var partIndex = findIndex(section.parts_summary, findExpr)
+                    if (partIndex != -1) {
+                        var summary = section.parts_summary[partIndex]
+                        var count = summary.count
+                        var part_path = path.join(section_path, part)
+                        fs.renameSync(part_path, `${part_path} (${summary.count})`)
+                    }
+                })
+
+                var zip_path = `${section_path}.zip`
+
+                if (fs.existsSync(zip_path)) {
+                    fs.unlinkSync(zip_path)
+                }
+
+                var output = fs.createWriteStream(zip_path)
+                var archive = archiver('zip', {
+                    zlib: { level: 9 }
+                })
+
+                output.on('close', function() {
+                    console.log(archive.pointer() + ' total bytes')
+                    console.log('archiver has been finalized and the output file descriptor has closed.')
+                })
+
+                archive.on('error', function(error) {
+                    console.log('Error on zip folder...')
+                    console.log(error)
+                })
+
+                archive.pipe(output)
+
+                archive.directory(section_path, section.name)
+
+                archive.finalize()
+            })
+
+            res.render('compress-list', {
+                title: '打包下載',
+                sections: sections
+            })
+        }
+
+        getUploadList(getUploadCompressList)
+    },
+
+    downloadZip: (req, res) => {
+        var section_name = req.params.section_name;
+        var uploadsCollection = mongo_db.db.collection('uploads')
+
+        uploadsCollection.find({ 'section': section }).toArray((err, uploads) => {
+            if (uploads && uploads.length == 0) {
+                res.status(303).send(`${section_name} has no more uploads`)
+                return
+            }
+
+            var section_path = path.join(options.uploadDir, section_name)
+
+            console.log(`section_path = ${section_path}`.yellow)
+
+            if (fs.existsSync(section_path)) {
+                rimraf.sync(section_path)
+            }
+            fs.mkdirSync(section_path)
+            
+            var section = {
+                name: section_name,
+                count: 1,
+            }
+            
+            _.each((uploads) => {
+                
+            })
+
+            var match = name.match(regex)
+            var part = '', indexOfParts = -1, part_path = ''
+            if (match && match != null) {
+                part = match[0]
+
+                if (!section.parts || section.parts === undefined) {
+                    section.parts = [part]
+                    section.parts_summary = [{ part_name: part, count: 0}]
+                }
+                else {
+                    indexOfParts = findIndex(section.parts, part)
+                    if (indexOfParts == -1 && part && part.length > 0) {
+                        section.parts.push(part)
+                        section.parts_summary.push({ part_name: part, count: 0})
+                    }
+                }
+
+                part_path = path.join(section_path, part)
+
+                var findFunc = (item) => {
+                    return item.part_name == part
+                }
+
+                var summaryIndex = findIndex(section.parts_summary, findFunc)
+                if (summaryIndex != -1) {
+                    var summary = section.parts_summary[summaryIndex]
+
+                    if (summary) {
+                        summary.count += 1
+                    }
+                }
+
+                if (fs.existsSync(part_path) == false) {
+                    fs.mkdirSync(part_path)
+                }
+
+                console.log(`part_path = ${part_path}`)
+
+                //var buffer = new Buffer(upload.buffer, 'binary')
+
+                fs.writeFileSync(path.join(part_path, name), upload.buffer, "binary")
+            }
+        })
+    },
+
     upload: (req, res, next) => {
 
         console.log('upload called...')
@@ -314,6 +589,7 @@ var controller = {
             buffer: Binary(file.buffer),
             size: file.size,
             createdate: new Date(),
+            section: moment().format('YYYY-M-D'),
         })
 
         res.sendStatus(200)
@@ -350,6 +626,12 @@ var controller = {
         fixInfo(() => {
             res.status(200)
         })
+    },
+
+    fixUploads: (req, res) => {
+        fixUploads(() => {
+            res.status(200)
+        })
     }
 }
 var initRoute = (app) => {
@@ -363,6 +645,8 @@ var initRoute = (app) => {
     app.post('/upload', uploadService.array('file'), controller.upload)
     app.get('/data/:file', controller.data)
     app.get('/fix-info', controller.fixInfo)
+    app.get('/fix-uploads', controller.fixUploads)
+    app.get('/compress', controller.compressDownloadList)
 }
 var init = () => {
     var express = require('express'),

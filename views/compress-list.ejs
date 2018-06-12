@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/app.css" />
+</head>
+
+<body>
+    <ul class="download-list">
+        <% for (var i = 0; i < sections.length; i++) { %>
+            <li>
+                <span class="download-text">
+                    <a href="/compress/<%= sections[i].name %>">下載 zip 壓縮檔</a>
+                    <span><%= sections[i].name %></span>
+                    <span>(共 <%= sections[i].parts.length %> 組)</span>
+                    <span>(共 <%= sections[i].count %> 個檔案)</span>
+                </span>
+            </li>
+        <% } %>
+    </ul>
+</body>
+
+</html>
