@@ -152,7 +152,12 @@ var compressList = (list, generationZip = false, callback) => {
             while (true) {
                 var _now = moment()
                 if (_now.diff(_start, 'seconds') == 10) {
-                    throw `Error while processing file : ${file_name} !`
+                    var err = `Error while processing file : ${file_name} !`
+                    err += '\r\n'
+                    err += `exists : ${fs.existsSync(file_name)}` + '\r\n'
+                    err += `size : ${fs.statSync(file_name).size}` + '\r\n'
+                    err += `actural size should be : ${size}`
+                    throw err
                     break;
                 }
                 if (fs.existsSync(file_name)) {
