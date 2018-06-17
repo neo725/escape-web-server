@@ -80,6 +80,7 @@ var compressList = (list, generationZip = false, callback) => {
     list.forEach((upload) => {
         var create_date = moment(upload.createdate)
         var name = upload.original_name
+        var size = upload.size
         var section_name = create_date.format('YYYY-M-D')
         var section_path = path.join(options.uploadDir, section_name)
 
@@ -145,7 +146,22 @@ var compressList = (list, generationZip = false, callback) => {
 
             //var buffer = new Buffer(upload.buffer, 'binary')
 
-            fs.writeFileSync(path.join(part_path, name), upload.buffer, "binary")
+            var file_name = path.join(part_path, name)
+            fs.writeFileSync(file_name, upload.buffer, "binary")
+            var _start = moment()
+            while (true) {
+                var _now = moment()
+                if (_now.diff(_start, 'seconds') == 10) {
+                    throw `Error while processing file : ${file_name} !`
+                    break;
+                }
+                if (fs.existsSync(file_name)) {
+                    var stat = fs.statSync(file_name)
+                    if (stat.size == size) {
+                        break;
+                    }
+                }
+            }
         }
         
     })
@@ -176,9 +192,10 @@ var compressList = (list, generationZip = false, callback) => {
         }
 
         var output = fs.createWriteStream(zip_path)
-        var archive = archiver('zip', {
-            zlib: { level: 9 }
-        })
+        // var archive = archiver('zip', {
+        //     zlib: { level: 9 }
+        // })
+        var archive = archiver('zip')
 
         output.on('close', function() {
             console.log(archive.pointer() + ' total bytes')
