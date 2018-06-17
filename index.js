@@ -144,11 +144,12 @@ var compressList = (list, generationZip = false, callback) => {
 
             console.log(`part_path = ${part_path}`)
 
-            //var buffer = new Buffer(upload.buffer, 'binary')
-            var buffer = Buffer.from(upload.buffer, 'binary')
+            var buffer = new Buffer(upload.buffer, 'binary')
+            //var buffer = Buffer.from(upload.buffer, 'binary')
             var file_name = path.join(part_path, name)
             if (name == '4FJ8UG_A.png') {
-                throw `name : ${name}, size: ${upload.size}, length : ${buffer.byteLength}`
+                console.log(`name : ${name}, size: ${upload.size}, length : ${buffer.byteLength}`)
+                console.log(buffer)
             }
 
             fs.writeFileSync(file_name, buffer, "binary")
