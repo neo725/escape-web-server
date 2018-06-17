@@ -77,10 +77,7 @@ var compressList = (list, generationZip = false, callback) => {
     //const regex = /(\w+)_.+/gi;
     const regex = /([0-9A-Z]+)/gi
 
-    list.forEach((_upload) => {
-        let objectId = _upload._id
-        let upload = mongo_db.db.collection('uploads').findOne({ _id: objectId })
-
+    list.forEach((upload) => {
         var create_date = moment(upload.createdate)
         var name = upload.original_name
         var size = upload.size
