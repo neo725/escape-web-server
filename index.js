@@ -77,7 +77,10 @@ var compressList = (list, generationZip = false, callback) => {
     //const regex = /(\w+)_.+/gi;
     const regex = /([0-9A-Z]+)/gi
 
-    list.forEach((upload) => {
+    list.forEach((_upload) => {
+        let objectId = _upload._id
+        let upload = mongo_db.db.collection('uploads').findOne({ _id: objectId })
+
         var create_date = moment(upload.createdate)
         var name = upload.original_name
         var size = upload.size
@@ -144,8 +147,8 @@ var compressList = (list, generationZip = false, callback) => {
 
             console.log(`part_path = ${part_path}`)
 
-            var buffer = new Buffer(upload.buffer, 'binary')
-            //var buffer = Buffer.from(upload.buffer, 'binary')
+            //var buffer = new Buffer(upload.buffer, 'binary')
+            var buffer = Buffer.from(upload.buffer.read(0, upload.buffer.length()), 'binary')
             var file_name = path.join(part_path, name)
             if (name == '4FJ8UG_A.png') {
                 console.log(`name : ${name}, size: ${upload.size}, length : ${buffer.byteLength}`)
