@@ -147,11 +147,6 @@ var compressList = (list, generationZip = false, callback) => {
             //var buffer = new Buffer(upload.buffer, 'binary')
             var buffer = Buffer.from(upload.buffer.read(0, upload.buffer.length()), 'binary')
             var file_name = path.join(part_path, name)
-            if (name == '4FJ8UG_A.png') {
-                console.log(`name : ${name}, size: ${upload.size}, length : ${buffer.byteLength}`)
-                console.log(buffer)
-            }
-
             fs.writeFileSync(file_name, buffer, "binary")
             var _start = moment()
             while (true) {
@@ -521,7 +516,7 @@ var controller = {
                 return res.json(error)
             }
 
-            var ordered_uploads = _.orderBy(uploads, [ 'section', 'createdate', 'original_name' ], [ 'desc', 'desc', 'asc' ])
+            var ordered_uploads = _.orderBy(uploads, [ 'createdate', 'original_name' ], [ 'desc', 'asc' ])
 
             var result = compressList(ordered_uploads)
 
