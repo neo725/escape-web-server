@@ -510,6 +510,10 @@ var controller = {
         })
     },
 
+    webplayer: (req, res) => {
+        res.render('webplayer')
+    },
+
     compressDownloadList: (req, res) => {
         var getUploadCompressList = (uploads, error) => {
             if (error) {
