@@ -652,6 +652,7 @@ var initRoute = (app) => {
     app.get('/fix-uploads', controller.fixUploads)
     app.get('/', controller.compressDownloadList)
     app.get('/compress/:section_name', controller.downloadZip)
+    app.get('/webplayer', controller.webplayer)
 }
 var init = () => {
     var express = require('express'),
